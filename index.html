@@ -1,0 +1,82 @@
+    ctx.restore();
+} 
+
+function updateHud() {
+    distanceValue.textContent = Math.floor(distance) + " م";
+    coinsValue.textContent = "🪙 " + (totalCoins + sessionCoins);
+    livesValue.textContent = "❤️".repeat(Math.max(0, lives));
+    speedValue.textContent = "×" + (speed / INITIAL_SPEED).toFixed(1);
+} 
+
+function moveLeft() { if (running && player.lane > 0) player.lane--; }
+function moveRight() { if (running && player.lane < LANE_COUNT - 1) player.lane++; } 
+
+window.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") moveLeft();
+    if (e.key === "ArrowRight") moveRight();
+    if (e.key.toLowerCase() === "h") startHorn();
+});
+window.addEventListener("keyup", e => { if (e.key.toLowerCase() === "h") stopHorn(); }); 
+
+leftButton.addEventListener("pointerdown", e => { e.preventDefault(); moveLeft(); });
+rightButton.addEventListener("pointerdown", e => { e.preventDefault(); moveRight(); });
+hornButton.addEventListener("pointerdown", e => { e.preventDefault(); startHorn(); });
+hornButton.addEventListener("pointerup", stopHorn); 
+
+function renderShop() {
+    shopCoins.textContent = "🪙 " + totalCoins;
+    const container = document.getElementById("shopItemsContainer");
+    container.innerHTML = ""; 
+
+    CAR_MODELS.forEach((car, index) => {
+        const isUnlocked = unlockedCars.includes(car.id);
+        const isSelected = selectedCarIndex === index; 
+
+        const card = document.createElement("div");
+        card.className = shop-card ${isSelected ? "selected" : ""};
+        card.innerHTML = 
+            <div class="car-info">
+                <div class="car-name" style="color:${car.color}">${car.name}</div>
+                <div class="car-cost">${isUnlocked ? "مملوكة" : "🪙 " + car.cost}</div>
+            </div>
+            <button class="${isSelected ? "" : "shop-btn"}">
+                ${isSelected ? "محددة" : isUnlocked ? "اختيار" : "شراء"}
+            </button>
+        ; 
+
+        const btn = card.querySelector("button");
+        btn.onclick = () => {
+            if (isUnlocked) {
+                selectedCarIndex = index;
+                saveNumber("roadRaceSelectedCar", selectedCarIndex);
+            } else if (totalCoins >= car.cost) {
+                totalCoins -= car.cost;
+                unlockedCars.push(car.id);
+                selectedCarIndex = index;
+                saveNumber("roadRaceTotalCoins", totalCoins);
+                saveArray("roadRaceUnlockedCars", unlockedCars);
+                saveNumber("roadRaceSelectedCar", selectedCarIndex);
+            }
+            renderShop();
+        };
+        container.appendChild(card);
+    });
+} 
+
+openShopButton.onclick = gameOverShopButton.onclick = () => {
+    renderShop();
+    startOverlay.style.display = "none";
+    gameOverOverlay.style.display = "none";
+    shopOverlay.style.display = "flex";
+};
+closeShopButton.onclick = () => {
+    shopOverlay.style.display = "none";
+    startOverlay.style.display = "flex";
+}; 
+
+startButton.onclick = restartButton.onclick = startGame;
+resetRoundState();
+draw();
+</script>
+</body>
+</html>
